@@ -27,6 +27,10 @@ var api = {};
     var ACTION_ADD_TAGS = 'add-tags';
     var ACTION_REMOVE_TAGS = 'remove-tags';
     var ACTION_RETRIEVE_TAGS = 'tags';
+    var ACTION_RETRIEVE_ADMIN_CATEGORIES = 'admincategories';
+    var ACTION_ADD_CATEGORIES = 'add-category';
+    var ACTION_REMOVE_CATEGORIES = 'remove-category';
+    var ACTION_RETRIEVE_CATEGORIES = 'categories';
     var ACTION_CREATE_VERSION = 'create-version';
     var HTTP_ERROR_NOT_IMPLEMENTED = 501;
     var CONTENT_TYPE_JSON = 'application/json';
@@ -232,6 +236,99 @@ var api = {};
         }
         return errorMsg(msg(500, 'Tags were not retrieved'));
     };
+    /***
+     * Retrieve the admin defined categories from the Management Console.
+     * @param {Object} req     request details
+     * @param {Object} res     response details
+     * @param {Object} session session details
+     * @param {Object} options Must contain the type of the asset and asset id
+     */
+    api.adminCategories = function(req, res, session, options) {
+        var categories = [];
+        var success;
+        if(req.getMethod() !== 'GET'){
+            return errorMsg(msg(405, 'Admin categories must be retrieved using a GET method'));
+        }
+        try {
+            categories = tagsAPI.adminCategories(req,res,session,options);
+            success = true;
+        } catch(e){
+            log.error(e);
+        }
+        if (success) {
+            return successMsg(msg(200, 'Admin categories retrieved successfully', categories));
+        }
+        return errorMsg(msg(500, 'Categories were not retrieved'));
+    };
+    /***
+     * Retrieve the category for an asset from tags.
+     * @param {Object} req     request details
+     * @param {Object} res     response details
+     * @param {Object} session session details
+     * @param {Object} options Must contain the type of the asset and asset id
+     */
+    api.categoriesFromTags = function(req, res, session, options) {
+        var category ;
+        var success;
+        if(req.getMethod() !== 'GET'){
+            return errorMsg(msg(405, 'Categories must be retrieved using a GET method'));
+        }
+        try {
+            category = tagsAPI.categoriesFromTags(req,res,session,options);
+            success = true;
+        } catch(e){
+            log.error(e);
+        }
+        if (success) {
+            return successMsg(msg(200, 'Categories of the asset retrieved successfully', category));
+        }
+        return errorMsg(msg(500, 'Categories were not retrieved'));
+    };
+    /***
+     * Remove the categories for an asset.
+     * @param {Object} req     request details
+     * @param {Object} res     response details
+     * @param {Object} session session details
+     * @param {Object} options Must contain the type of the asset and asset id
+     */
+    api.removeCategory = function(req, res, session, options) {
+        var success;
+        if(req.getMethod() !== 'DELETE'){
+            return errorMsg(msg(405, 'Category must be removed using a DELETE'));
+        }
+        try {
+            success = tagsAPI.removeCategory(req, res, session, options);
+
+        } catch (e) {
+            log.error(e);
+        }
+        if (success) {
+            return successMsg(msg(200, 'Category removed successfully'));
+        }
+        return errorMsg(msg(500, 'Category were not removed'));
+    };
+    /***
+     * Add the category for an asset.
+     * @param {Object} req     request details
+     * @param {Object} res     response details
+     * @param {Object} session session details
+     * @param {Object} options Must contain the type of the asset and asset id
+     */
+    api.addCategory = function(req, res, session, options) {
+        var success;
+        if(req.getMethod() !== 'POST'){
+            return errorMsg(msg(405, 'Category must be added by a POST'));
+        }
+        try {
+            success = tagsAPI.addCategory(req, res, session, options);
+        } catch (e) {
+            log.error(e);
+        }
+        if (success) {
+            return successMsg(msg(200, 'Category added successfully'));
+        }
+        return errorMsg(msg(500, 'Category were not added'));
+    };
     /**
      * api to create  a new version of the given asset
      * @param  options Object containing asset id, type, new version
@@ -297,6 +394,18 @@ var api = {};
                 break;
             case ACTION_CREATE_VERSION:
                 result = api.createVersion(req, res, session, options);
+                break;
+            case ACTION_RETRIEVE_ADMIN_CATEGORIES:
+                result = api.adminCategories(req, res, session, options);
+                break;
+            case ACTION_RETRIEVE_CATEGORIES:
+                result = api.categoriesFromTags(req, res, session, options);
+                break;
+            case ACTION_ADD_CATEGORIES:
+                result = api.addCategory(req, res, session, options);
+                break;
+            case ACTION_REMOVE_CATEGORIES:
+                result = api.removeCategory(req, res, session, options);
                 break;
             default:
                 break;

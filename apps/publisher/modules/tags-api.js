@@ -116,6 +116,74 @@ var api = {};
         }
         return am.removeTags(options.id, options.tags);
     };
+    /**
+     * Returns the provided set of admin defined categories to a given asset.
+     *
+     * @param {Object} req     request details
+     * @param {Object} res     response details
+     * @param {Object} session session details
+     * @param {Object} options Must contain the type of the asset and asset id
+     */
+    api.adminCategories = function (req, res, session, options) {
+        var categories;
+        var am = assetManager(req, session, options);
+        validateOptions(options); //TODO : send correct exception to user
+        categories = am.getAdminCategories(options.id);
+        return categories;
+    };
+    /**
+     * Returns the provided set of stored categories to a given asset.
+     * @param {Object} req     request details
+     * @param {Object} res     response details
+     * @param {Object} session session details
+     * @param {Object} options Must contain the type of the asset and asset id
+     */
+    api.categoriesFromTags = function (req, res, session, options) {
+        var category;
+        var am = assetManager(req, session, options);
+        validateOptions(options);
+        category = am.getCategoriesFromTags(options.id);
+        return category;
+    };
+    /**
+     * Remove the category from given asset.
+     * @param {Object} req     request details
+     * @param {Object} res     response details
+     * @param {Object} session session details
+     * @param {Object} options Must contain the type of the asset and asset id
+     */
+    api.removeCategory = function (req, res, session, options) {
+        var am = assetManager(req, session, options);
+        validateOptions(options);
+        options = processRequestBody(req, options);
+        if (!options.category) {
+            throw 'Please provide category in the body of the request';
+        }
+        if (log.isDebugEnabled()) {
+            log.debug('category to remove: ' + stringify(options.category));
+        }
+        return am.removeCategory(options.id, options.category);
+    };
+    /**
+     * Add the provided category to a given asset.
+     * should be provided in the body of the request
+     * @param {Object} req     request details
+     * @param {Object} res     response details
+     * @param {Object} session session details
+     * @param {Object} options Must contain the type of the asset and asset id
+     */
+    api.addCategory = function (req, res, session, options) {
+        var am = assetManager(req, session, options);
+        validateOptions(options);
+        options = processRequestBody(req, options);
+        if (!options.category) {
+            throw 'Please provide category in the body of the request';
+        }
+        if (log.isDebugEnabled()) {
+            log.debug('category to add: ' + stringify(options.category));
+        }
+        return am.addCategory(options.id, options.category);
+    };
     api.search = function(am, options) {
         var q = options.q;
         var tags = [];

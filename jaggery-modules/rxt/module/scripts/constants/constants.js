@@ -170,5 +170,6 @@ var constants = {};
     };
 
     constants.MultitenantConstants = Packages.org.wso2.carbon.utils.multitenancy.MultitenantConstants;
+    constants.FILTER_CHAR = '/';
 
 }(constants));

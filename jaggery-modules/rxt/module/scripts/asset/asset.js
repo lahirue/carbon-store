@@ -34,6 +34,7 @@ var asset = {};
     var DEFAULT_RECENT_ASSET_COUNT = 5; //TODO: Move to constants
     var GovernanceUtils = Packages.org.wso2.carbon.governance.api.util.GovernanceUtils;
     var PaginationContext = Packages.org.wso2.carbon.registry.core.pagination.PaginationContext;
+    var GovernanceCommon = org.wso2.carbon.governance.api.util.TaxonomyCategoryParser;
     var LifeCycleService = carbon.server.osgiService('org.wso2.carbon.governance.lcm.services.LifeCycleService');
     var defaultPalette = [
         "#1abc9c", "#16a085", "#2ecc71", "#27ae60",
@@ -1085,11 +1086,18 @@ var asset = {};
             return tagged;
         }
         if (!asset.path) {
-            log.error('Unable to add tags ' + stringify(tags) + ' to asset id: ' + id + ' as the asset path was not located');
+            log.error('Unable to add tags ' + stringify(tags) + ' to asset id: ' + id +
+                ' as the asset path was not located');
         }
         try {
-            this.registry.tag(asset.path, tags);
-            tagged = true;
+            for(var index =0; index< tags.length; index++){
+                tag = tags[index];
+                if (tag.indexOf('/') < 0) {
+                    this.registry.tag(asset.path, tag);
+                    tagged = true;
+                }
+            }
+            //tagged = true;
         } catch (e) {
             log.error('Unable to add tags: ' + stringify(tags), e);
         }
@@ -1108,15 +1116,19 @@ var asset = {};
             return tagged;
         }
         if (!asset.path) {
-            log.error('Unable to add tags ' + stringify(tags) + ' to asset id: ' + id + ' as the asset path was not located');
+            log.error('Unable to add tags ' + stringify(tags) + ' to asset id: ' + id +
+                ' as the asset path was not located');
         }
         try{
             for(var index =0; index< tags.length; index++){
                 tag = tags[index];
-                this.registry.untag(asset.path,tag);
+                // filter tags which not contains forward slash '/'
+                if (tag.indexOf('/') < 0) {
+                    this.registry.untag(asset.path, tag);
+                    untagged = true;
+                }
             }
             //TODO: Make the untagging process atomic
-            untagged = true;
         } catch(e){
             log.error('One or more tags were not untagged ',e);
         }
@@ -1130,20 +1142,168 @@ var asset = {};
      */
     AssetManager.prototype.getTags = function(id){
         var asset = this.get(id);
-        var tags;
+        var tags = [];
         if (!asset) {
             log.error('Unable to retrieve tags of asset: ' + id + ' as it was not located.');
-            return tagged;
+            return tags; // renamed tagged to null
         }
         if (!asset.path) {
             log.error('Unable to retrieve the tags of the asset : ' + id + ' as the asset path was not located');
         }
         try{
-            tags = this.registry.tags(asset.path)||[];
+            var allTags = this.registry.tags(asset.path) || [];
+            for (var i = 0; i < allTags.length; i++) {
+                var tempTag = allTags[i];
+                // filter tags which not contains forward slash '/'
+                if (tempTag.indexOf(constants.FILTER_CHAR) < 0) {
+                    tags.push(allTags[i]);
+                }
+            }
         } catch(e){
             log.error('Unable to retrieve the tags of the provided asset ',e);
         }
         return tags;
+    };
+    /**
+     * Returns the category applied to an asset from tags list
+     * @param  {String} id A UUID representing an asset instance
+     * @return {Object}  Category for an asset
+     */
+    AssetManager.prototype.getCategoriesFromTags = function (id) {
+        var asset = this.get(id);
+        var category = [];
+        if (!asset) {
+            log.error('Unable to retrieve category of asset: ' + id + ' as it was not located.');
+            return state;
+        }
+        if (!asset.path) {
+            log.error('Unable to retrieve the category of the asset : ' + id + ' as the asset path was not located');
+        }
+        try {
+            var allTags = this.registry.tags(asset.path) || [];
+            for (var i = 0; i < allTags.length; i++) {
+                var tempTag = allTags[i];
+                // filter category from tags which contains forward slash
+                if (tempTag.indexOf(constants.FILTER_CHAR) >= 0) {
+                    category.push(allTags[i]);
+                }
+            }
+        } catch (e) {
+            log.error('Unable to retrieve the category of the provided asset ', e);
+        }
+
+        return category;
+    };
+    /**
+     * This method is use to get the populated category path list.
+     * Returns the set of categories which admin defined
+     * @return {Object}  Categories list as paths, which admin defined.
+     */
+    AssetManager.prototype.getAdminCategories = function () {
+        var categoryPathList;
+        var categoryArray;
+        try {
+            categoryPathList = GovernanceCommon.getPathCategories();
+            if (categoryPathList) {
+                categoryArray = categoryPathList.toArray();
+            }
+        } catch (e) {
+            log.error('Unable to retrieve the admin categories from java Utils ', e);
+        }
+        return categoryArray;
+    };
+    /***
+     * Remove the given category from given asset
+     *
+     * @param id An UUID representing an asset instance
+     * @param category name of the category
+     * @returns boolean Status of the operation
+     */
+    AssetManager.prototype.removeCategory = function (id, categories) {
+        var asset = this.get(id);
+        var category;
+        var removeState = false;
+        var utilsAPI = require('utils');
+        if (!utilsAPI.reflection.isArray(categories)) {
+            categories = [categories];
+        }
+        if (!asset) {
+            log.error('Unable to add category: ' + stringify(categories) + ' to asset id: ' + id +
+                ' as it was not located.');
+            return removeState;
+        }
+        if (!asset.path) {
+            log.error('Unable to add category ' + stringify(categories) + ' to asset id: ' + id +
+                ' as the asset path was not located');
+            return removeState;
+        }
+        try {
+            for (var index = 0; index < categories.length; index++) {
+                category = categories[index];
+
+                if (checkInCategories(this.getAdminCategories(), category)) {
+                    this.registry.untag(asset.path, category);
+                }
+            }
+            removeState = true;
+        } catch (e) {
+            log.error('One or more category were not removed ', e);
+        }
+        return removeState;
+    };
+    /***
+     * This method checks the availability of user input category, inside Admin define categories
+     * @param input Category text
+     * @param categories Admin defined category list
+     * @returns {boolean} Aavailability status
+     */
+    var checkInCategories = function (categories, input) {
+        var isContained = false;
+        for (var i = 0; i < categories.length; i++) {
+            if (categories[i].indexOf(input) == 0) {
+                isContained = true;
+            }
+        }
+        return isContained;
+
+    };
+    /***
+     * Add a category to given asset
+     *
+     * @param id An UUID representing an asset instance
+     * @param category name of the category
+     * @returns boolean Status of the operation
+     */
+
+    AssetManager.prototype.addCategory = function (id, category) {
+        var asset = this.get(id);
+        var categoryStatus = false;
+
+        if (!asset) {
+            log.error('Unable to add category: ' + category + ' to asset id: ' + id + ' as it was not located.');
+            return categoryStatus;
+        }
+        if (!asset.path) {
+            log.error('Unable to add category ' + category + ' to asset id: ' + id +
+                ' as the asset path was not located');
+            return categoryStatus;
+        }
+        try {
+            if (category && category.indexOf(constants.FILTER_CHAR) >= 0 &&
+                    checkInCategories(this.getAdminCategories(), category)) {
+                this.registry.tag(asset.path, category);
+                categoryStatus = true;
+
+            } else {
+                categoryStatus = false;
+            }
+
+
+        } catch (e) {
+            log.error('Unable to add category: ' + category, e);
+        }
+
+        return categoryStatus;
     };
     /**
      * The method returns the rating value of a given asset
