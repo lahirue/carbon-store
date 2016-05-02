@@ -187,7 +187,7 @@ $(function() {
 
     });
 
-
-
+    $("#jstree-taxonomy").unbind("click");
+    $("#jstree-taxonomy").click(function(e){e.preventDefault()});
 
 });
