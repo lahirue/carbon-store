@@ -534,9 +534,7 @@ $(window).load(function () {
             });
 
             // bellow code block will generate sub categories for only
-            if (assetAvailability || store.listAssetsCount > 0) {
                 var nodes = getURL().split("/");
-
                 var path = nodes[0];
 
                 for (var i = 1; i < nodes.length; i++) {
@@ -577,7 +575,9 @@ $(window).load(function () {
 
                                 //since we have "/" in variable name, jquery selector cant select that element
                                 var currentElement = document.getElementById(path);
-                                createHTMLFromJsonSub(taxaSub, $(currentElement));
+                                if (assetAvailability || store.listAssetsCount > 0 || glbcnt < nodes.length -1) {
+                                    createHTMLFromJsonSub(taxaSub, $(currentElement));
+                                }
 
                             },
                             error: function () {
@@ -593,7 +593,6 @@ $(window).load(function () {
 
                     }
                 }
-            }
 
         } else {
             // alywas 0 will be first element.
