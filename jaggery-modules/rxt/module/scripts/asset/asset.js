@@ -564,6 +564,36 @@ var asset = {};
         }
         return assets;
     };
+    
+    /**
+     *This method will replace all matched text in a given string
+     * @param find
+     * @param replace
+     * @returns {string}
+     */
+    String.prototype.replaceAll = function (find, replace) {
+        var str = this;
+        return str.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
+    };
+
+    /**
+     * This method will replace all brackets with new star "*" and if there are no brackets add two stars to both side
+     *
+     * @param value
+     * @returns updated value
+     */
+    function appendStarsWithBrackets(value) {
+        if (value.indexOf('(') > -1) {
+            value = value.replaceAll("(", "(*");
+            value = value.replaceAll(")", "*)");
+            if (value.indexOf(('(* ')) > -1) {
+                value = value.replaceAll("(* ", "(*").replaceAll(" *)", "*)");
+            }
+        } else {
+            value = '*' + value + '*';
+        }
+        return value;
+    }
     var buildQueryString = function(query,options) {
         var queryString = [];
         var value;
@@ -590,15 +620,17 @@ var asset = {};
                 if (wildcard && key != 'tags' && !(value.indexOf('&') > -1) && !queryWithQuots
                     && !(value.indexOf('(') > -1)) {
                     value = '*'+value+'*';
-                }else if (wildcard && key != 'tags' && (value.indexOf(' OR ') > -1)){
-                    if (value.indexOf('(') > -1) {
-                        value = value.replace("(", "(*");
-                        value = value.replace(")", "*)");
-                    } else {
-                        value = '*'+value+'*';
+                } else if (wildcard && key != 'tags' && (value.indexOf(' OR ') > -1)) {
+                    value = appendStarsWithBrackets(value);
+                    value = value.replaceAll(" OR ", "* OR *");
+                    if (value.indexOf(' AND ') > -1) {
+                        value = value.replaceAll(" AND ", "* AND *");
                     }
-                    value = value.replace(" OR ", "* OR *");
+                } else if (wildcard && key != 'tags' && (value.indexOf(' AND ') > -1)) {
+                    value = appendStarsWithBrackets(value);
+                    value = value.replaceAll(" AND ", "* AND *");
                 }
+                value = value.replace("/(* /g", "(*").replace("/ */g)","*)");
                 queryString.push(key + '=' + encodeURIComponent(value));
             }
         }
