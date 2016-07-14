@@ -564,7 +564,7 @@ var asset = {};
         }
         return assets;
     };
-    
+
     /**
      *This method will replace all matched text in a given string
      * @param find
@@ -630,7 +630,6 @@ var asset = {};
                     value = appendStarsWithBrackets(value);
                     value = value.replaceAll(" AND ", "* AND *");
                 }
-                value = value.replace("/(* /g", "(*").replace("/ */g)","*)");
                 queryString.push(key + '=' + encodeURIComponent(value));
             }
         }
