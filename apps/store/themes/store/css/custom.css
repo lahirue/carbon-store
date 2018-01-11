@@ -206,7 +206,7 @@ h2.app-title {
 }
 #search-button{
     border-radius: 0;
-    background: #fff;
+    background: #cecfd0;
 }
 
 #search.has-error {
@@ -698,7 +698,7 @@ a.login:focus {
 }
 .asset-rating-container {
     margin-top:6px;
-    margin-left: 10px;
+    margin-left: 2px;
 }
 
 .asset-rating {

@@ -17,29 +17,29 @@
  *
  */
 var format = function(context, data, page, area, meta) {
-	context = context();
-	context.user = data.user;
-	return context;
+    context = context();
+    context.user = data.user;
+    return context;
 };
 
 var resources = function(page, meta) {
-	return {
-		js: ['asset-helpers.js', 'navigation.js', 'popover.js', 'jquery.validate.js', 'jquery.cookie.js', 'search.js',
-			'list_assets.js', 'categorization.js', 'categorization-data.js', 'taxonomy_view.js',
-			'wso2-visual-elements.js', 'select2.full.min.js'],
-		css: ['navigation.css', 'categorization.css', 'theme-categorization.min.css']
-	};
+    return {
+        js: ['asset-helpers.js', 'navigation.js', 'popover.js', 'jquery.validate.js', 'jquery.cookie.js', 'search.js',
+            'list_assets.js', 'categorization.js', 'categorization-data.js', 'taxonomy_view.js','select2.full.min.js',
+            'wso2-visual-elements.js', 'select2.full.min.js'],
+        css: ['navigation.css', 'categorization.css', 'theme-categorization.min.css','select2.min.css']
+    };
 };
 
 var currentPage = function(navigation, type, search) {
-	var asset;
+    var asset;
 
-	for (asset in navigation.assets) {
-		if (asset == type) {
-			navigation.assets[asset].selected = true;
-			break;
-		}
-	}
-	navigation.search = search;
-	return navigation;
+    for (asset in navigation.assets) {
+        if (asset == type) {
+            navigation.assets[asset].selected = true;
+            break;
+        }
+    }
+    navigation.search = search;
+    return navigation;
 };

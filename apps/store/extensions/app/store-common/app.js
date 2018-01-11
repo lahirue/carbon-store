@@ -53,8 +53,8 @@ app.server = function(ctx) {
         },
         configs: {
             disabledAssets: ['ebook', 'api', 'wsdl', 'service','policy','proxy','schema','sequence','servicex','uri','wadl','endpoint','swagger','restservice','comments','soapservice'],
-            uiDisabledAssets: [],
-            title : "WSO2 Enterprise Store",
+            uiDisabledAssets: ['wadl','wsdl','proxy','swagger','policy','soapservice','schema'],
+            title : "Metadata Portal Store",
             defaultSearchSplit: function(term, searchTemplate){
                 var terms ;
                 var newStr = "";

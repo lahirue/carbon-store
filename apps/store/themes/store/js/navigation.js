@@ -145,6 +145,12 @@ $(function() {
 
 	var collapsed;
 	$(document).ready(function () {
+
+        $("#e1").select2();
+        $("#e1").select2() .on("change",function(e) {
+            window.location = $(this).find('option:selected').attr('data-href');
+        });
+
 		collapsed = false;
 		var tagContentHeight = $('#tag-container').height();
 		if (tagContentHeight > 280) {
